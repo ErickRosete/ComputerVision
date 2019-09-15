@@ -150,6 +150,8 @@ def decode(loc, priors, variances):
         decoded bounding box predictions
     """
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    priors = priors.to(device)
     boxes = torch.cat((
         priors[:, :2] + loc[:, :2] * variances[0] * priors[:, 2:],
         priors[:, 2:] * torch.exp(loc[:, 2:] * variances[1])), 1)
