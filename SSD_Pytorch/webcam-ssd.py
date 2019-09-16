@@ -7,38 +7,24 @@ import numpy as np
 
 def detect(frame, net, transform, device):
     height, width = frame.shape[:2]
-    # transformations
     frame_t = transform(frame)[0]
-    x = torch.from_numpy(frame_t)
-    x = x.permute(2,0,1)
-    x = x.unsqueeze(0)
-    x = Variable(x)
-    x = x.to(device)
-    # Neural network
+    x = torch.from_numpy(frame_t).permute(2,0,1)
+    x = Variable(x.unsqueeze(0)).to(device)
     y = net(x)
     detections = y.data
     scale = torch.Tensor([width, height, width, height])
-    # detections = [batch, numberOfClasses, 
-    # numberOfOccurrences, (score, x0, y0, x1, y1)]
-    
+
     for i in range(detections.size(1)):
         j = 0
         while detections[0, i, j, 0] >= 0.6:
             pt = (detections[0, i, j, 1:] * scale).numpy()
-
-            if np.isnan(pt).any() or np.isinf(pt).any() or (pt > max(width, height)).any() or (pt < 0).any():
-                a = 1
-            else:
-                try:
-                    cv2.rectangle(frame, (int(pt[0]), int(pt[1])), 
-                     (int(pt[2]), int(pt[3])), (255, 0, 0), 2)
-                    cv2.putText(frame, labelmap[i-1], (int(pt[0]), int(pt[1])), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 
-                    2, cv2.LINE_AA)
-                except:
-                    print("error")
-                    print(pt)
-
+            if not(np.isnan(pt).any() or np.isinf(pt).any() or \
+                   (pt > max(width, height)).any() or (pt < 0).any()):
+                cv2.rectangle(frame, (int(pt[0]), int(pt[1])), 
+                 (int(pt[2]), int(pt[3])), (255, 0, 0), 2)
+                cv2.putText(frame, labelmap[i-1], (int(pt[0]), int(pt[1])), 
+                cv2.FONT_HERSHEY_SIMPLEX, 2, (255, 255, 255), 
+                2, cv2.LINE_AA)
             j += 1
         if i == 15:
             print('cantidad de personas: %d' % j)
